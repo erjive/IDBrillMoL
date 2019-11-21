@@ -1,0 +1,64 @@
+# Schedule definitions for thorn IDBrillMoL
+# $Header$
+
+  STORAGE: scalarevolvemol[3]
+  STORAGE: rhsscalar
+  STORAGE: Brillsrc
+
+
+  schedule IDBrillMoL_InitSymBound at BASEGRID
+  {
+    LANG: C
+    OPTIONS: META
+  } "Schedule symmetries"
+
+  schedule zero_rhs at BASEGRID after InitSymBound
+  {
+    LANG: C
+  } "set all rhs functions to zero to prevent spurious nans"
+
+  schedule initial_conditions at CCTK_INITIAL
+  {
+    LANG: C
+  } "Initial data for wave-like equation"
+
+  schedule setupbrilldata2D at CCTK_INITIAL
+  {
+    LANG: C
+  } "Calculate the Brill source of the wave-like equation"
+
+  schedule IDBrillMoL_RegisterVars in MoL_Register
+  {
+    LANG: C
+    OPTIONS: META
+  } "Register variables for MoL"
+
+  schedule calc_rhs in MoL_CalcRHS as Brill_CalcRHS
+  {
+    LANG: C
+  } "MoL RHS calculation for wave-like equation for the conformal factor"
+
+ schedule calc_rhs_bdry in MoL_CalcRHS as Brill_CalcRHS_Bdry \
+           after Brill_CalcRHS
+ {
+   LANG: C
+ } "MoL boundary RHS calculation for Proca variables"
+
+  schedule IDBrillMoL_Boundaries in MoL_PostStep
+  {
+    LANG: C
+    OPTIONS: LEVEL
+    SYNC: IDBrillMoL::scalarevolvemol
+    #SYNC: IDBrillMoL::rhsscalar
+
+  } "MoL boundary enforcement for wave equation variables"
+
+  schedule GROUP ApplyBCs as Brill_ApplyBCs in MoL_PostStep after boundaries
+  {
+  } "Apply boundary conditions"
+
+  schedule tolerance in MoL_PostStep after Brill_ApplyBCs
+  {
+    LANG: C
+  } "Check if we reach the tolerance"
+

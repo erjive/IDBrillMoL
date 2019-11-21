@@ -1,0 +1,61 @@
+shares: IO
+USES KEYWORD  recover
+
+shares: MethodOfLines
+USES CCTK_INT MoL_Num_Evolved_Vars
+USES CCTK_INT MoL_Num_Constrained_Vars
+USES CCTK_INT MoL_Num_SaveAndRestore_Vars
+
+
+restricted:
+
+KEYWORD q_function "Type of qbrill shape"
+{
+  "exp"    ::   "q1"
+  "eppley" ::   "q2"
+  "gundlach" :: "q3"
+} "gundlach"
+
+CCTK_INT n_brill "n power of outgoing boundary r^n fall off rate for pi"
+{
+  0:4           :: "I guess 1"
+} 1
+
+CCTK_REAL gundlacha "Gundlach Brill wave: Amplitude"
+{
+  *:* :: ""
+} 2.0
+
+restricted:
+CCTK_REAL gundlachb "Gundlach Brill wave: used in exponent in rho: rho^b"
+{
+  *:* :: ""
+} 2
+
+restricted:
+CCTK_REAL gundlachsrho "Gundlach Brill wave: sigma in rho"
+{
+  *:* :: ""
+} 1.
+
+restricted:
+CCTK_REAL gundlachr0 "Gundlach Brill wave: radius of torus in r"
+{
+  *:* :: ""
+} 0.
+
+restricted:
+CCTK_REAL gundlachsigmar "Gundlach Brill wave: sigma in r"
+{
+  *:* :: ""
+} 1.
+
+CCTK_REAL k_damping "Damping coefficient for the wave-like equation"
+{
+  0:1.0 :: ""
+} 0.05
+
+CCTK_REAL tol_pi "Tolerance for the conformal factor"
+{
+  0:* ::""
+} 1e-9

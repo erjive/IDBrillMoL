@@ -1,0 +1,107 @@
+#include "stdio.h"
+#include "stdlib.h"
+#include "cctk.h"
+#include "cctk_Arguments.h"
+#include "cctk_Parameters.h"
+#include "math.h"
+
+void tolerance(CCTK_ARGUMENTS)
+/* Calculate the diference of Pi=dphi/dt between two consecutive iterations
+   If we reach the tolerance, stop the wave-like evolution for the conformal factor */
+{
+  DECLARE_CCTK_ARGUMENTS;
+  DECLARE_CCTK_PARAMETERS;
+
+  int vindex;             /* grid variable index */
+  int target_proc;        /* processor to hold the result */
+  int reduction_handle;   /* handle for reduction operator */
+  char *reduction_name;   /* reduction operator to use */
+
+  CCTK_REAL result;       // reduction value of iteration i
+  static CCTK_REAL result_p; //reduction value of iteration i-1
+  double diff_it;         // difference of mean values at consecutive iterations
+  int ierr = -1;
+
+  int i,j,k;
+  int index;
+  int istart, jstart, kstart, iend, jend, kend;
+  CCTK_REAL lres , gres;     //Local and globla residual
+
+  istart = 1;
+  jstart = 1;
+  kstart = 1;
+
+  iend = cctk_lsh[0];
+  jend = cctk_lsh[1];
+  kend = cctk_lsh[2];
+
+  lres = 0.0;
+  gres = 0.0;
+
+  if (cctk_iteration>0){
+  reduction_name = "norm2";
+  vindex = CCTK_VarIndex ("IDBrillMoL::pi_p");
+  // the reduction result will be obtained by processor 0 only
+  target_proc = 0;
+
+  // get the handle for the given reduction operator
+  reduction_handle = CCTK_ReductionHandle (reduction_name);
+  }
+  if (reduction_handle >= 0)
+  {
+  // now do the reduction using the flesh’s generic reduction API
+  //(passing in one input, expecting one output value of REAL type)
+  ierr = CCTK_Reduce (cctkGH, target_proc, reduction_handle,1, CCTK_VARIABLE_REAL, &result, 1, vindex);
+
+  }
+  // Compare the mean value of Pi between iteration i and i+1
+
+  if (ierr<0)
+
+  {
+      CCTK_WARN(0,"Average of Pi failed!");
+  }
+
+/*  BEGIN_GLOBAL_MODE(cctkGH) {
+    ENTER_LEVEL_MODE(cctkGH, 0) {
+
+
+    for (k=kstart; k<kend; k++)
+      {
+        for (j=jstart; j<jend; j++)
+          {
+            for (i=istart; i<iend; i++)
+               {
+                  index = CCTK_GFINDEX3D(cctkGH,i,j,k);
+
+                  lres+=fabs(phi[index]-phi_p[index]);
+
+               }
+          }
+      }
+
+    gres = lres/((iend-1)*(jend-1)*(kend-1));
+
+    } LEAVE_LEVEL_MODE;
+  } END_GLOBAL_MODE;
+*/
+  if (cctk_iteration>100)
+  {
+    diff_it = fabs(result-result_p);
+
+    if ( diff_it <= tol_pi )
+    {
+
+      printf("Tolerance reached after %d iterations, tolerancia=%e \n ",cctk_iteration,diff_it);
+
+      //ierr = CCTK_OutputVarAs(cctkGH,"IDBrillMoL::phi","brillpsi");
+
+      CCTK_TerminateNext (cctkGH);
+    }
+
+  }
+
+  /*Save the mean value of Pi of the current iteration */
+  result_p = result;
+
+}

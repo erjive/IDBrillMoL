@@ -1,0 +1,86 @@
+# Interface definition for thorn IDBrillMoL
+
+implements: IDBrillMoL
+inherits: grid Boundary
+
+#INCLUDES HEADER: Boundary.h in Boundary.h
+
+CCTK_INT FUNCTION                        \
+    Boundary_SelectVarForBC            \
+        (CCTK_POINTER_TO_CONST IN GH,    \
+         CCTK_INT IN faces,              \
+         CCTK_INT IN boundary_width,     \
+         CCTK_INT IN table_handle,       \
+         CCTK_STRING IN var_name,      \
+         CCTK_STRING IN bc_name)
+REQUIRES FUNCTION Boundary_SelectVarForBC
+
+CCTK_INT FUNCTION                        \
+    Boundary_SelectGroupForBC            \
+        (CCTK_POINTER_TO_CONST IN GH,    \
+         CCTK_INT IN faces,              \
+         CCTK_INT IN boundary_width,     \
+         CCTK_INT IN table_handle,       \
+         CCTK_STRING IN group_name,      \
+         CCTK_STRING IN bc_name)
+REQUIRES FUNCTION Boundary_SelectGroupForBC
+
+#CCTK_INT FUNCTION                       \
+#    BndRadiativeVN                      \
+#    (CCTK_POINTER_TO_CONST IN cctkGH,   \
+#     CCTK_INT IN stencil_size,          \
+#     CCTK_REAL IN limit,                \
+#     CCTK_REAL IN speed,                \
+#     CCTK_STRING IN variable_name,      \
+#     CCTK_STRING IN variable_name_past)
+#REQUIRES FUNCTION BnRadiativeVN
+
+CCTK_INT FUNCTION                         \
+    NewRad_Apply                          \
+        (CCTK_POINTER_TO_CONST IN cctkGH, \
+         CCTK_REAL ARRAY IN var,          \
+         CCTK_REAL ARRAY INOUT rhs,       \
+         CCTK_REAL IN var0,               \
+         CCTK_REAL IN v0,                 \
+         CCTK_INT IN radpower)
+REQUIRES FUNCTION NewRad_Apply
+
+####################################################
+###  Functions provided by MoL for registration  ###
+####################################################
+
+CCTK_INT FUNCTION MoLRegisterEvolved(CCTK_INT IN EvolvedIndex, \
+                                     CCTK_INT IN RHSIndex)
+CCTK_INT FUNCTION MoLRegisterEvolvedGroup(CCTK_INT IN EvolvedIndex, \
+                                          CCTK_INT IN RHSIndex)
+CCTK_INT FUNCTION MoLRegisterSaveAndRestoreGroup(CCTK_INT IN SandRIndex)
+CCTK_INT FUNCTION MoLRegisterConstrainedGroup(CCTK_INT IN ConstrainedIndex)
+
+USES FUNCTION MoLRegisterEvolved
+USES FUNCTION MoLRegisterEvolvedGroup
+USES FUNCTION MoLRegisterSaveAndRestoreGroup
+USES FUNCTION MoLRegisterConstrainedGroup
+
+public:
+
+#Conformal factor and his derivative
+
+CCTK_REAL scalarevolvemol type=gf timelevels=3 tags='tensortypealias="Scalar" tensorweight=0'
+{
+  phi
+  pi
+} "lhs"
+
+# Right-hand sides
+#------------------
+
+CCTK_REAL rhsscalar type=gf tags='tensortypealias="Scalar" tensorweight=0 prolongation="none" Checkpoint="no"'
+{
+  rhs_phi
+  rhs_pi
+} "right hand sides for phi,pi evolution equations"
+
+CCTK_REAL Brillsrc type=gf tags='tensortypealias="Scalar" tensorweight=0 prolongation="none" Checkpoint="no"'
+{
+  brillsource
+} "Source for the wave-like Brill equation"
